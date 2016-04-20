@@ -7,13 +7,27 @@ import sys
 # import sqlite3
 from Crypto.Cipher import AES
 
+with open('foo.txt', 'r') as fo:
+    data = fo.readlines()
 fo = open(os.path.join(sys.path[0], "foo.txt"), "a+")
 
-user = raw_input("Account:(No special symbols allowed)\n")
-pwd = raw_input("Password:(First charactor should not be symbol)\n")
-enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
+new_user = raw_input("Account:(No special symbols allowed)\n")
+new_pwd = raw_input("Password:(First charactor should not be symbol)\n")
+new_enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
 
-line = fo.writelines(user+":"+pwd+" "+enopt)
+# Check if there is a existing account name
+credentials = {}
+for line in data:
+    user, pwd_enopt = line.strip().split(':')
+    pwd, enopt = pwd_enopt.split( )
+    credentials[user] = pwd
+
+if new_user in credentials:
+    print "exist"
+else:
+    # Write line to the file
+    line = fo.writelines(new_user+":"+new_pwd+" "+new_enopt+"\n")
+    print "New Account info added!!!"
 
 obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
 message = "The answer is no"
