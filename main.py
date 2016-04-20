@@ -3,6 +3,8 @@ import sys
 # import sqlite3
 from Crypto.Cipher import AES
 
+FILENAME = "foo.txt"
+
 class Account(object):
     def __init__(self, user, pwd, enopt):
         self.user = user
@@ -21,10 +23,24 @@ def verify_enopt(option):
     else:
         print "Encrypt option incorrect, please retry."
 
+def exist_account(file,new_user):
+    with open(file, 'r') as fo:
+        data = fo.readlines()
+    credentials = {}
+    for line in data:
+        user, pwd_enopt = line.strip().split(':')
+        pwd, enopt = pwd_enopt.split( )
+        credentials[user] = pwd
+
+    if new_user in credentials:
+        print "Account name already exist"
+        return True
+    else:
+        return False
 # conn=sqlite3.connect('accounts.db')
 # print "Database created and opened succesfully"
 # Open a file in append mode
-fo = open(os.path.join(sys.path[0], "foo.txt"), "a+")
+fo = open(os.path.join(sys.path[0], FILENAME), "a+")
 print "Name of the file: ", fo.name
 
 option = raw_input("Options:\n"
@@ -44,33 +60,22 @@ if (option == 1):
     new.enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
     verify_enopt(new.enopt)
 
+if exist_account(FILENAME,new.user) == False:
+    # Write line to the file
+    line = fo.writelines(new.user+":"+new.pwd+" "+new.enopt+"\n")
+    print "New Account info added!!!"
 
-# seq = ["This is 6th line\n", "This is 7th line"]
-# Write sequence of lines at the end of the file.
-# fo.seek(0, 2)
-
-
-# Now read complete file from beginning.
-# fo.seek(0, 0)
-# for index in range(7):
-#     line = fo.next()
-#     print "Line No %d - %s" % (index, line)
 
 # obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
 obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
 message = "The answer is no"
-print "Message in plaintext:" + message
+# print "Message in plaintext:" + message
 ciphertext = obj.encrypt(message)
-print "Message in ciphertext:" + ciphertext
+# print "Message in ciphertext:" + ciphertext
 # '\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
 obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
 output = obj2.decrypt(ciphertext)
-print output
-# 'The answer is no'
-
-# line = fo.writelines("Message in plaintext:" + message + "\n")
-# line = fo.writelines("Message in ciphertext:" + ciphertext + "\n")
-# line = fo.writelines(output)
+# print output
 
 
 print "Operation done successfully";
