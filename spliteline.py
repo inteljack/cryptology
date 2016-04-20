@@ -1,3 +1,6 @@
+"""
+@Editor:Ying-Ta Lin
+"""
 credentials = {}
 with open('foo.txt', 'r') as f:
     data = f.readlines()
