@@ -7,9 +7,20 @@ FILENAME = "foo.txt"
 
 class Account(object):
     def __init__(self, user, pwd, enopt):
+        self.enopt = 'default' # default
         self.user = user
         self.pwd = pwd
         self.enopt = enopt
+
+    def EncryptMode(self,file, exist_user):
+        with open(file, 'r') as fo:
+            data = fo.readlines()
+        credentials = {}
+        for line in data:
+            user, pwd_enopt = line.strip().split(':')
+            pwd, enopt = pwd_enopt.split( )
+            credentials[user] = enopt
+        return credentials[exist_user]
 
 def verify(option):
     try:
@@ -18,12 +29,12 @@ def verify(option):
         print "Please enter option index only."
 
 def verify_enopt(option):
-    if option in ['ECB', 'CBC', 'CTR']:
+    if option in ['ECB', 'CBC', 'CTR', '']:
         print "Encrypt option correct."
     else:
         print "Encrypt option incorrect, please retry."
 
-def exist_account(file,new_user):
+def exist_account(file, new_user):
     with open(file, 'r') as fo:
         data = fo.readlines()
     credentials = {}
@@ -44,8 +55,8 @@ fo = open(os.path.join(sys.path[0], FILENAME), "a+")
 print "Name of the file: ", fo.name
 
 option = raw_input("Options:\n"
-                    "1.Create new account and pass.\n"
-                    "2.Find Account\n"
+                    "1.Create new account\n"
+                    "2.Login\n"
                     "0.Exit\n")
 
 verify(option)
@@ -53,6 +64,7 @@ option = int(option)
 print "Your option is:", option
 # option = int(option)
 
+# Create new account
 if (option == 1):
     new = Account('','','')
     new.user = raw_input("Account:(No special symbols allowed)\n")
@@ -60,10 +72,23 @@ if (option == 1):
     new.enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
     verify_enopt(new.enopt)
 
-if exist_account(FILENAME,new.user) == False:
-    # Write line to the file
-    line = fo.writelines(new.user+":"+new.pwd+" "+new.enopt+"\n")
-    print "New Account info added!!!"
+    if exist_account(FILENAME, new.user) == False:
+        # Write line to the file
+        line = fo.writelines(new.user+":"+new.pwd+" "+new.enopt+"\n")
+        print "New Account info added!!!"
+
+# Login
+elif (option == 2):
+    login = Account('','','')
+    login.user = raw_input("Account:\n")
+    login.pwd = raw_input("Password:\n")
+    login.enopt = ''
+    if exist_account(FILENAME, login.user) == True:
+        login.enopt = login.EncryptMode(FILENAME, login.user)
+        print "Encryption mode is:" + login.enopt
+    else:
+        print "Account not exist."
+
 
 
 # obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
