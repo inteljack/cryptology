@@ -1,9 +1,19 @@
+'''
+Data format:
+     "Username" + ':' + "Encryption Mode" + "salt" + "Password"
+    |---(max)---|  :  |------3 * char-----|---32---|-----96-----|
+
+'''
+
 import os
 import sys
+from getpass import getpass
 # import sqlite3
+from Crypto import Random
 from Crypto.Cipher import AES
 
 FILENAME = "foo.txt"
+BLOCKSIZE = 16
 
 class Account(object):
     def __init__(self, user, pwd, enopt):
@@ -12,15 +22,15 @@ class Account(object):
         self.pwd = pwd
         self.enopt = enopt
 
-    def EncryptMode(self,file, exist_user):
+    def EncryptMode(self, file, login):
         with open(file, 'r') as fo:
             data = fo.readlines()
         credentials = {}
         for line in data:
             user, pwd_enopt = line.strip().split(':')
             pwd, enopt = pwd_enopt.split( )
-            credentials[user] = enopt
-        return credentials[exist_user]
+            credentials[user] = pwd, enopt
+        return credentials[login.user][1]
 
 def verify(option):
     try:
@@ -34,20 +44,21 @@ def verify_enopt(option):
     else:
         print "Encrypt option incorrect, please retry."
 
-def exist_account(file, new_user):
+def exist_account(file, new):
     with open(file, 'r') as fo:
         data = fo.readlines()
     credentials = {}
     for line in data:
         user, pwd_enopt = line.strip().split(':')
         pwd, enopt = pwd_enopt.split( )
-        credentials[user] = pwd
+        credentials[user] = pwd, enopt
 
-    if new_user in credentials:
+    if new.user in credentials:
         print "Account name already exist"
         return True
     else:
         return False
+
 # conn=sqlite3.connect('accounts.db')
 # print "Database created and opened succesfully"
 # Open a file in append mode
@@ -68,23 +79,24 @@ print "Your option is:", option
 if (option == 1):
     new = Account('','','')
     new.user = raw_input("Account:(No special symbols allowed)\n")
-    new.pwd = raw_input("Password:(First letter should not be a symbol)\n")
+    new.pwd = getpass("Password:(First letter should not be a symbol)\n")
     new.enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
     verify_enopt(new.enopt)
 
-    if exist_account(FILENAME, new.user) == False:
+    if exist_account(FILENAME, new) == False:
         # Write line to the file
         line = fo.writelines(new.user+":"+new.pwd+" "+new.enopt+"\n")
-        print "New Account info added!!!"
-
+        print "New account info added!!!"
+    else:
+        print "No account added."
 # Login
 elif (option == 2):
     login = Account('','','')
     login.user = raw_input("Account:\n")
-    login.pwd = raw_input("Password:\n")
+    login.pwd = getpass("Password:\n")
     login.enopt = ''
-    if exist_account(FILENAME, login.user) == True:
-        login.enopt = login.EncryptMode(FILENAME, login.user)
+    if exist_account(FILENAME, login) == True:
+        login.enopt = login.EncryptMode(FILENAME, login)
         print "Encryption mode is:" + login.enopt
     else:
         print "Account not exist."
