@@ -1,21 +1,51 @@
+'''
+Data format:
+     "Username" + ':' + "Encryption Mode" + "salt" + "Password"
+    |---(max)---|  :  |------3 * char-----|---32---|-----96-----|
+
+'''
 import os
 import sys
+import random
+import datetime
 from Crypto import Random
 from Crypto.Cipher import AES
 
-FILENAME = "foo.txt"
+'''
+For testing
+'''
+password = 'password'
+username = 'Chris'
+
+'''
+'''
+
+
+FILENAME = "encryptdata.txt"
 BLOCKSIZE = 16
+# 16, 24 or 32 bytes master key. DO NOT LEAVE THIS LINE IN PRODUCTION!!!!
+MASTERKEY = 'mSrtAqNBtDwHo6O8CmEIYAeGNhdaA4yX'
+# must be 16 bytes long
+IV = 'This is an IV456'
+
+fo = open(os.path.join(sys.path[0], FILENAME), "a+")
+# print "Name of the file: ", fo.name
 
 with open(FILENAME, 'r') as fo:
     data = fo.readlines()
 credentials = {}
 for line in data:
-    user, pwd_enopt = line.strip().split(':')
-    pwd, enopt = pwd_enopt.split( )
-    credentials[user] = (pwd, enopt)
+    user, enopt_salt_pwd = line.strip().split(':')
+    enopt = enopt_salt_pwd[:3]
+    salt = enopt_salt_pwd[3:35]
+    pwd = enopt_salt_pwd[35:131]
+    credentials[user] = (enopt, salt, pwd)
 
-fo = open(os.path.join(sys.path[0], FILENAME), "a+")
-# print "Name of the file: ", fo.name
+def generate_aes_key():
+    pool = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return ''.join(random.choice(pool) for i in range(32))
+    # rnd = Crypto.Random.OSRNG.posix.new().read(AES.block_size)
+    # return rnd
 
 class Encryption(object):
     def __init__(self, key, enopt, iv):
@@ -38,18 +68,25 @@ class Encryption(object):
         data = raw.encode('utf-8') + padding_required * padChar
         return data
 
+    def __unpad(self, s):
+        '''
+        This strips all of the 0x00 from the string passed in.
+
+        @param s: the byte string to unpad
+        @return: unpadded byte string
+        '''
+        s = s.rstrip(b'\x00')
+        return s
+
     def TransMode(self):
-        # AES.MODE_ECB = 1
-        # AES.MODE_CBC = 2
-        # AES.MODE_CTR = 6
         if self.enopt == 'ECB':
-            return 1
+            return 1    # AES.MODE_ECB = 1
         elif self.enopt == 'CBC':
-            return 2
+            return 2    # AES.MODE_CBC = 2
         elif self.enopt == 'CTR':
-            return 6
-        else: # default
-            return 1
+            return 6    # AES.MODE_CTR = 6
+        else:   # default
+            return 1    # AES.MODE_ECB = 1
 
     def EncryptPass(self, plaintext):
         obj = AES.new(self.key, self.TransMode(),self.iv)
@@ -67,25 +104,46 @@ class Encryption(object):
 # print cred['John'][1]
 # print ("\n".join(cred))
 
-new = Encryption('This is a key123', credentials['Danis'][1], 'This is an IV456')
-# print new.EncryptPass(credentials['Danis'][0])
-temp = new.EncryptPass(credentials['Danis'][0])
-# print temp.encode("hex")
-line = fo.writelines(temp.encode("hex")+"\n")
-# line = fo.writelines("".join(hex(ord(n)) for n in temp)+"\n")
+timestamp = str(datetime.datetime.now())
+# print len(timestamp)
 
+salt = Random.get_random_bytes(6) + timestamp
+# print salt
+#
+# salt = SHA256.new(timestamp)
+# print len(str(salt))
+#
+# new = Encryption(MASTERKEY, credentials['Danis'][1], IV)
+# # print new.EncryptPass(credentials['Danis'][0])
+# temp = new.EncryptPass(credentials['Danis'][0])
+# # print temp.encode("hex")
+# # line = fo.writelines(temp.encode("hex")+"\n")
+# # line = fo.writelines("".join(hex(ord(n)) for n in temp)+"\n")
 
 
 # obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-message = "The answer is no"
+obj = AES.new(MASTERKEY, AES.MODE_CBC, IV)
+message = "The answer is noo"
+print "message length", len(message)
+if (len(message) % BLOCKSIZE == 0):
+    padmsg = message
+else:
+    padding_required = BLOCKSIZE - (len(message) % BLOCKSIZE)
+    padChar = b'\x00'
+    padmsg = message.encode('utf-8') + padding_required * padChar
+    print "padmsg length", len(padmsg)
+
 # print "Message in plaintext:" + message
-ciphertext = obj.encrypt(message)
+ciphertext = obj.encrypt(padmsg)
+print len(ciphertext.encode('hex'))
+
 # print "Message in ciphertext:" + " ".join(hex(ord(n)) for n in ciphertext)
 # '\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
-obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+obj2 = AES.new(MASTERKEY, AES.MODE_CBC, IV)
 output = obj2.decrypt(ciphertext)
-# print output
+output = output.rstrip(b'\x00')
+print output
+print "output message length", len(output.encode('utf-8'))
 
 # Close opend file
 fo.close()
