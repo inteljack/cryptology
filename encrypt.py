@@ -12,14 +12,14 @@ from Crypto import Random
 from Crypto.Cipher import AES
 
 '''
-For testing
+For testing parameters
 '''
-password = 'password'
+password = 'password1'
 username = 'Chris'
 
 '''
+end
 '''
-
 
 FILENAME = "encryptdata.txt"
 BLOCKSIZE = 16
@@ -27,9 +27,6 @@ BLOCKSIZE = 16
 MASTERKEY = 'mSrtAqNBtDwHo6O8CmEIYAeGNhdaA4yX'
 # must be 16 bytes long
 IV = 'This is an IV456'
-
-fo = open(os.path.join(sys.path[0], FILENAME), "a+")
-# print "Name of the file: ", fo.name
 
 with open(FILENAME, 'r') as fo:
     data = fo.readlines()
@@ -41,11 +38,8 @@ for line in data:
     pwd = enopt_salt_pwd[35:131]
     credentials[user] = (enopt, salt, pwd)
 
-def generate_aes_key():
-    pool = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return ''.join(random.choice(pool) for i in range(32))
-    # rnd = Crypto.Random.OSRNG.posix.new().read(AES.block_size)
-    # return rnd
+fo = open(os.path.join(sys.path[0], FILENAME), "a+")
+# print "Name of the file: ", fo.name
 
 class Encryption(object):
     def __init__(self, key, enopt, iv):
@@ -66,6 +60,8 @@ class Encryption(object):
         padding_required = BLOCKSIZE - (len(raw) % BLOCKSIZE)
         padChar = b'\x00'
         data = raw.encode('utf-8') + padding_required * padChar
+        # if data <= 96:
+
         return data
 
     def __unpad(self, s):
@@ -108,8 +104,10 @@ timestamp = str(datetime.datetime.now())
 # print len(timestamp)
 
 salt = Random.get_random_bytes(6) + timestamp
-# print salt
-#
+print "salt: ", salt
+print "salt(hex): ", salt.encode('hex')
+print "Salt length: ", len(salt)
+print "Salt type: ", type(salt)
 # salt = SHA256.new(timestamp)
 # print len(str(salt))
 #
@@ -123,7 +121,9 @@ salt = Random.get_random_bytes(6) + timestamp
 
 # obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
 obj = AES.new(MASTERKEY, AES.MODE_CBC, IV)
-message = "The answer is noo"
+# message = password
+message = salt.encode('hex') + password.encode('hex')
+# print concat
 print "message length", len(message)
 if (len(message) % BLOCKSIZE == 0):
     padmsg = message
@@ -135,15 +135,17 @@ else:
 
 # print "Message in plaintext:" + message
 ciphertext = obj.encrypt(padmsg)
-print len(ciphertext.encode('hex'))
+line = fo.writelines(username+":"+"CBC"+salt.encode('hex')+ciphertext.encode('hex')+"\n")
+
+# print "cipher: ", ciphertext.encode('hex'), len(ciphertext)
 
 # print "Message in ciphertext:" + " ".join(hex(ord(n)) for n in ciphertext)
 # '\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
 obj2 = AES.new(MASTERKEY, AES.MODE_CBC, IV)
 output = obj2.decrypt(ciphertext)
 output = output.rstrip(b'\x00')
-print output
-print "output message length", len(output.encode('utf-8'))
+print output.decode('hex')[32:]
+print "output message length", len(output)
 
 # Close opend file
 fo.close()
