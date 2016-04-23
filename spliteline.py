@@ -8,6 +8,7 @@ with open('foo.txt', 'r') as f:
 
 for line in data:
     user, pwd = line.strip().split(':')
+    pwd, enopt = pwd.split( )
     credentials[user] = pwd
 
 print credentials['Danis']

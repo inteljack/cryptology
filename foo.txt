@@ -1,3 +1,5 @@
 Chris:password ECB
 Danis:@pas5word CBC
 jack:w96j0f% CTR
+Account:passW0rd CTR
+Leander:44#$%^&f default

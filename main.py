@@ -7,13 +7,22 @@ Data format:
 
 import os
 import sys
+import random
+import datetime
 from getpass import getpass
 # import sqlite3
 from Crypto import Random
 from Crypto.Cipher import AES
+from encrypt import Encryption
 
-FILENAME = "foo.txt"
+# FILENAME = "foo.txt"
+
+FILENAME = "encryptdata.txt"
 BLOCKSIZE = 16
+# 16, 24 or 32 bytes master key. DO NOT LEAVE THIS LINE IN PRODUCTION!!!!
+MASTERKEY = 'mSrtAqNBtDwHo6O8CmEIYAeGNhdaA4yX'
+# must be 16 bytes long
+IV = 'This is an IV456'
 
 class Account(object):
     def __init__(self, user, pwd, enopt):
@@ -45,13 +54,16 @@ def verify_enopt(option):
         print "Encrypt option incorrect, please retry."
 
 def exist_account(file, new):
-    with open(file, 'r') as fo:
+    with open(FILENAME, 'r') as fo:
         data = fo.readlines()
     credentials = {}
     for line in data:
-        user, pwd_enopt = line.strip().split(':')
-        pwd, enopt = pwd_enopt.split( )
-        credentials[user] = pwd, enopt
+        user, enopt_salt_pwd = line.strip().split(':')
+        enopt = enopt_salt_pwd[:3]
+        salt = enopt_salt_pwd[3:67]
+        pwd = enopt_salt_pwd[67:]
+        # print len(pwd)
+        credentials[user] = (enopt, salt, pwd)
 
     if new.user in credentials:
         print "Account name already exist"
@@ -84,8 +96,15 @@ if (option == 1):
     verify_enopt(new.enopt)
 
     if exist_account(FILENAME, new) == False:
+        # Create salt and encrypt password
+        timestamp = str(datetime.datetime.now())
+        salt = Random.get_random_bytes(6) + timestamp
+        message = salt.encode('hex') + new.pwd.encode('hex')
+        newenc = Encryption(MASTERKEY, new.enopt, IV, salt.encode('hex'))
+        ciphertext = newenc.EncryptPass(message)
+
         # Write line to the file
-        line = fo.writelines(new.user+":"+new.pwd+" "+new.enopt+"\n")
+        line = fo.writelines(new.user+":"+new.enopt+salt.encode('hex')+ciphertext.encode('hex')+"\n")
         print "New account info added!!!"
     else:
         print "No account added."
