@@ -6,7 +6,7 @@ Data format:
 '''
 import os
 import sys
-import random
+# import random
 import datetime
 from Crypto import Random
 from Crypto.Cipher import AES

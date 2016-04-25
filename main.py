@@ -7,7 +7,7 @@ Data format:
 
 import os
 import sys
-import random
+# import random
 import datetime
 from getpass import getpass
 # import sqlite3
