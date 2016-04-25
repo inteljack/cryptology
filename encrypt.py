@@ -10,19 +10,22 @@ import sys
 import datetime
 from Crypto import Random
 from Crypto.Cipher import AES
+from Crypto.Util import Counter
 
 '''
 For testing parameters
 '''
-password = 'password'
-username = 'David'
+password = 'password123'
+username = 'Leander'
 
 '''
 end
 '''
 
-FILENAME = "encryptdata.txt"
+# FILENAME = "encryptdata.txt"
+FILENAME = "foo.txt"
 BLOCKSIZE = 16
+NUM_COUNTER_BITS = 128
 # 16, 24 or 32 bytes master key. DO NOT LEAVE THIS LINE IN PRODUCTION!!!!
 MASTERKEY = 'mSrtAqNBtDwHo6O8CmEIYAeGNhdaA4yX'
 # must be 16 bytes long
@@ -97,14 +100,22 @@ class Encryption(object):
             return 1    # AES.MODE_ECB = 1
 
     def EncryptPass(self, plaintext):
-        obj = AES.new(self.key, self.TransMode(),self.iv)
+        if self.enopt == 'CTR':
+            counter = Counter.new(NUM_COUNTER_BITS)
+            obj = AES.new(self.key, self.TransMode(), self.iv, counter=counter)
+        else:
+            obj = AES.new(self.key, self.TransMode(), self.iv)
         padpass = self.__pad(plaintext)
         # print " ".join(hex(ord(n)) for n in padpass)
         # print " ".join(hex(ord(n)) for n in plaintext)
         return obj.encrypt(padpass)
 
     def DecryptPass(self, cipher):
-        obj = AES.new(self.key, self.TransMode(), self.iv)
+        if self.enopt == 'CTR':
+            counter = Counter.new(NUM_COUNTER_BITS)
+            obj = AES.new(self.key, self.TransMode(), self.iv, counter=counter)
+        else:
+            obj = AES.new(self.key, self.TransMode(), self.iv)
         hex_cipher = self.__decode(cipher)
         # print "hex_cipher: ", hex_cipher
         padpass = obj.decrypt(hex_cipher.decode('hex'))
@@ -135,15 +146,17 @@ salt = Random.get_random_bytes(6) + timestamp
 # obj = AES.new(MASTERKEY, AES.MODE_CBC, IV)
 # message = password
 message = salt.encode('hex') + password.encode('hex')
-new = Encryption(MASTERKEY, 'CBC', IV, salt.encode('hex'))
+new = Encryption(MASTERKEY, 'CTR', IV, salt.encode('hex'))
 ciphertext = new.EncryptPass(message)
 
-# line = fo.writelines(username+":"+"CBC"+salt.encode('hex')+ciphertext.encode('hex')+"\n")
-print "Chris"
+# line = fo.writelines(username+":"+"CTR"+salt.encode('hex')+ciphertext.encode('hex')+"\n")
+
+print username
 print "Mode: ", credentials[username][0]
 print "Salt: ", credentials[username][1]
 print "Cipher: ", credentials[username][2]
 # intform = int(credentials['Chris'][2], 16)
+
 rev = Encryption(MASTERKEY, credentials[username][0], IV, credentials[username][1])
 hh =  credentials[username][2]
 print rev.DecryptPass(hh)

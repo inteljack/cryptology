@@ -42,7 +42,6 @@ class Account(object):
             pwd = enopt_salt_pwd[67:]
             # print len(pwd)
             credentials[user] = (enopt, salt, pwd)
-            print user, self.user
 
         if self.user in credentials:
             print "Account name found"
