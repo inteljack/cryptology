@@ -14,8 +14,8 @@ from Crypto.Cipher import AES
 '''
 For testing parameters
 '''
-password = 'password1'
-username = 'Chris'
+password = 'password'
+username = 'David'
 
 '''
 end
@@ -75,7 +75,7 @@ class Encryption(object):
 
     def __decode(self, cipher):
         hex_cipher = ""
-        for x in hh:
+        for x in cipher:
             num = ord(x)
             if num > 96:
                 num = num - 87
@@ -104,7 +104,7 @@ class Encryption(object):
         return obj.encrypt(padpass)
 
     def DecryptPass(self, cipher):
-        obj = AES.new(self.key, self.TransMode(),self.iv)
+        obj = AES.new(self.key, self.TransMode(), self.iv)
         hex_cipher = self.__decode(cipher)
         # print "hex_cipher: ", hex_cipher
         padpass = obj.decrypt(hex_cipher.decode('hex'))
@@ -140,14 +140,12 @@ ciphertext = new.EncryptPass(message)
 
 # line = fo.writelines(username+":"+"CBC"+salt.encode('hex')+ciphertext.encode('hex')+"\n")
 print "Chris"
-print "Mode: ", credentials['Chris'][0]
-print "Salt: ", credentials['Chris'][1]
-print "Cipher: ", credentials['Chris'][2]
+print "Mode: ", credentials[username][0]
+print "Salt: ", credentials[username][1]
+print "Cipher: ", credentials[username][2]
 # intform = int(credentials['Chris'][2], 16)
-rev = Encryption(MASTERKEY, credentials['Chris'][0], IV, credentials['Chris'][1])
-
-hh =  credentials['Chris'][2]
-
+rev = Encryption(MASTERKEY, credentials[username][0], IV, credentials[username][1])
+hh =  credentials[username][2]
 print rev.DecryptPass(hh)
 
 

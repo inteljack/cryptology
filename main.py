@@ -31,15 +31,26 @@ class Account(object):
         self.pwd = pwd
         self.enopt = enopt
 
-    def EncryptMode(self, file, login):
-        with open(file, 'r') as fo:
+    def GetAccount(self, file):
+        with open(FILENAME, 'r') as fo:
             data = fo.readlines()
         credentials = {}
         for line in data:
-            user, pwd_enopt = line.strip().split(':')
-            pwd, enopt = pwd_enopt.split( )
-            credentials[user] = pwd, enopt
-        return credentials[login.user][1]
+            user, enopt_salt_pwd = line.strip().split(':')
+            enopt = enopt_salt_pwd[:3]
+            salt = enopt_salt_pwd[3:67]
+            pwd = enopt_salt_pwd[67:]
+            # print len(pwd)
+            credentials[user] = (enopt, salt, pwd)
+            print user, self.user
+
+        if self.user in credentials:
+            print "Account name found"
+            return credentials[self.user]
+        else:
+            print "Account name not found"
+            credentials[self.user] = ('', '', '')
+            return credentials[self.user]
 
 def verify(option):
     try:
@@ -52,24 +63,6 @@ def verify_enopt(option):
         print "Encrypt option correct."
     else:
         print "Encrypt option incorrect, please retry."
-
-def exist_account(file, new):
-    with open(FILENAME, 'r') as fo:
-        data = fo.readlines()
-    credentials = {}
-    for line in data:
-        user, enopt_salt_pwd = line.strip().split(':')
-        enopt = enopt_salt_pwd[:3]
-        salt = enopt_salt_pwd[3:67]
-        pwd = enopt_salt_pwd[67:]
-        # print len(pwd)
-        credentials[user] = (enopt, salt, pwd)
-
-    if new.user in credentials:
-        print "Account name already exist"
-        return True
-    else:
-        return False
 
 # conn=sqlite3.connect('accounts.db')
 # print "Database created and opened succesfully"
@@ -95,7 +88,7 @@ if (option == 1):
     new.enopt = raw_input("Encrypt option(CBC, ECB, CTR):\n")
     verify_enopt(new.enopt)
 
-    if exist_account(FILENAME, new) == False:
+    if new.GetAccount(FILENAME) == ('', '', ''):
         # Create salt and encrypt password
         timestamp = str(datetime.datetime.now())
         salt = Random.get_random_bytes(6) + timestamp
@@ -114,24 +107,20 @@ elif (option == 2):
     login.user = raw_input("Account:\n")
     login.pwd = getpass("Password:\n")
     login.enopt = ''
-    if exist_account(FILENAME, login) == True:
-        login.enopt = login.EncryptMode(FILENAME, login)
+    cred = login.GetAccount(FILENAME)
+    login.enopt = cred[0]
+    print login.user
+    if cred != ('', '', ''):
+        rev = Encryption(MASTERKEY, login.enopt, IV, cred[1])
+        hh =  rev.DecryptPass(cred[2])
+        print "Your password is: " + hh
+
         print "Encryption mode is:" + login.enopt
-    else:
+    elif login.GetAccount(FILENAME) == ('', '', ''):
         print "Account not exist."
+    else:
+        print "Error - GetAccount() return illegal data."
 
-
-
-# obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-message = "The answer is no"
-# print "Message in plaintext:" + message
-ciphertext = obj.encrypt(message)
-# print "Message in ciphertext:" + ciphertext
-# '\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
-obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-output = obj2.decrypt(ciphertext)
-# print output
 
 
 print "Operation done successfully";
