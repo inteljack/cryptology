@@ -1,4 +1,5 @@
 '''
+@@Author: Ying-Ta Lin
 Data format:
      "Username" + ':' + "Encryption Mode" + "salt" + "Password"
     |---(max)---|  :  |------3 * char-----|---32---|-----96-----|
