@@ -1,7 +1,7 @@
 # cryptology
 Application Security class assignment.
 This application is running with command line, no UI implemented.
-Featuring three chain block encryption mode `CBC, ECB and CTR`and the
+Featuring three chain block encryption mode `CBC, ECB and CTR` and the
 encryption processes are via Python Crypto module.
 
 Python 2.7
