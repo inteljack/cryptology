@@ -19,3 +19,6 @@ run code using command `python main.py`
 
 ### Other ###
 code passes PEP8 rules
+
+* Notice data is stored into file as hex and string combined in one line.
+However, when read from file, Python recognize as ASCII strings. Additional ASCII to hex conversion is implemented.
