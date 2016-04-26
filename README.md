@@ -29,4 +29,4 @@ code passes PEP8 rules
 However, when read from file, Python recognize as ASCII strings. Additional ASCII to hex conversion is implemented.
 
 
-* Github URL:[repo](https://github.com/inteljack/cryptology)
+* Github URL:[inteljack](https://github.com/inteljack/cryptology)
