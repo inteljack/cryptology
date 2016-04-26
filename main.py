@@ -1,4 +1,5 @@
 '''
+@@Author: Ying-Ta Lin
 Data format:
      "Username" + ':' + "Encryption Mode" + "salt" + "Password"
     |---(max)---|  :  |------3 * char-----|---32---|-----96-----|
@@ -119,6 +120,10 @@ elif (option == 2):
     if cred != ('', '', ''):
         rev = Encryption(MASTERKEY, login.enopt, IV, cred[1])
         hh = rev.DecryptPass(cred[2])
+        if login.pwd == hh:
+            print "(password correct)"
+        else:
+            print "(password incorrect)"
         print "Your password is: " + hh
         print "Encryption mode is:" + login.enopt
         print "You are logged in!!!!"
