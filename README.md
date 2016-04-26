@@ -12,5 +12,10 @@ Python 2.7
 
 run code using command `python main.py`
 
+## How do these encryption work?? ##
+![CBC_dec](http://i.imgur.com/8R1sw5O.png)
+![ECB_dec](http://i.imgur.com/v8A1Hoa.png)
+![CTR_dec](http://i.imgur.com/uGUrdKB.png)
+
 ### Other ###
 code passes PEP8 rules
