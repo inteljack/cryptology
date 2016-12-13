@@ -1,4 +1,4 @@
-# Cryptology
+# PassVault
 Application Security class assignment.
 This application is running with command line, no UI implemented.
 Featuring three chain block encryption mode `CBC, ECB and CTR` and the
